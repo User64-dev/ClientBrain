@@ -358,6 +358,8 @@ function Navbar() {
 ═══════════════════════════════════════════════════════════════ */
 function Hero() {
   const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState("");
   const heroRef = useRef<HTMLElement>(null);
 
   /* scroll-driven parallax on hero content */
@@ -376,10 +378,29 @@ function Hero() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Waitlist email:", email);
-    setEmail("");
+    setStatus("loading");
+    setErrorMsg("");
+
+    try {
+      const res = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Something went wrong. Please try again.");
+      }
+
+      setStatus("success");
+      setEmail("");
+    } catch (err) {
+      setStatus("error");
+      setErrorMsg(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+    }
   };
 
   return (
@@ -426,30 +447,65 @@ function Hero() {
           briefing — organized by client. No more digging.
         </p>
 
-        {/* Form */}
-        <form
-          onSubmit={handleSubmit}
-          className="anim-form mt-10 flex flex-col sm:flex-row gap-3 w-full max-w-md"
-        >
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@company.com"
-            className="flex-1 px-4 py-3 rounded-lg bg-white/[0.06] border border-white/10 text-white
-                       placeholder-white/25 text-sm outline-none
-                       focus:border-[#4F8EF7]/50 focus:shadow-[0_0_0_3px_rgba(79,142,247,0.12)]
-                       transition-all duration-200"
-          />
-          <MagneticButton
-            type="submit"
-            className="magnetic-btn-primary px-6 py-3 rounded-lg bg-[#4F8EF7] text-white text-sm font-medium
-                       hover:bg-[#6ba3ff] active:scale-95 transition-colors duration-200 cursor-pointer whitespace-nowrap"
+        {/* Form / Success */}
+        {status === "success" ? (
+          <div className="anim-form mt-10 flex flex-col items-center gap-3 w-full max-w-md">
+            <div className="flex items-center gap-2 px-5 py-3.5 rounded-xl border border-emerald-500/30
+                            bg-emerald-500/10 text-emerald-400 text-sm font-medium">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <circle cx="10" cy="10" r="10" fill="currentColor" fillOpacity="0.15" />
+                <path d="M6 10l3 3 5-5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              You&apos;re on the list! We&apos;ll be in touch soon 🎉
+            </div>
+          </div>
+        ) : (
+          <form
+            onSubmit={handleSubmit}
+            className="anim-form mt-10 flex flex-col gap-3 w-full max-w-md"
           >
-            Join Waitlist
-          </MagneticButton>
-        </form>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@company.com"
+                disabled={status === "loading"}
+                className="flex-1 px-4 py-3 rounded-lg bg-white/[0.06] border border-white/10 text-white
+                           placeholder-white/25 text-sm outline-none
+                           focus:border-[#4F8EF7]/50 focus:shadow-[0_0_0_3px_rgba(79,142,247,0.12)]
+                           transition-all duration-200
+                           disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+              <MagneticButton
+                type="submit"
+                className={`magnetic-btn-primary px-6 py-3 rounded-lg text-white text-sm font-medium
+                           transition-all duration-200 cursor-pointer whitespace-nowrap
+                           flex items-center justify-center gap-2
+                           ${status === "loading"
+                             ? "bg-[#4F8EF7]/60 pointer-events-none"
+                             : "bg-[#4F8EF7] hover:bg-[#6ba3ff] active:scale-95"}`}
+              >
+                {status === "loading" ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeOpacity="0.25" />
+                      <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                    </svg>
+                    Joining…
+                  </>
+                ) : (
+                  "Join Waitlist"
+                )}
+              </MagneticButton>
+            </div>
+
+            {status === "error" && (
+              <p className="text-red-400 text-xs mt-1">{errorMsg}</p>
+            )}
+          </form>
+        )}
 
         <p className="anim-hint mt-4 text-xs text-white/22">
           No spam. Unsubscribe anytime.
