@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import Link from "next/link";
 
 /* ═══════════════════════════════════════════════════════════════
    SCROLL PROGRESS BAR
@@ -342,13 +343,21 @@ function Navbar() {
       <span className="text-white font-semibold text-xl tracking-tight select-none">
         Client<span className="text-[#4F8EF7]">Brain</span>
       </span>
-      <MagneticButton
-        onClick={() => document.getElementById("waitlist")?.scrollIntoView({ behavior: "smooth" })}
-        className="magnetic-btn-primary px-4 py-2 rounded-lg bg-[#4F8EF7] text-white text-sm font-medium
-                   hover:bg-[#6ba3ff] active:scale-95 transition-colors duration-200 cursor-pointer"
-      >
-        Join Waitlist
-      </MagneticButton>
+      <div className="flex items-center gap-4">
+        <Link 
+          href="/login" 
+          className="text-white/80 hover:text-white text-sm font-medium transition-colors duration-200"
+        >
+          Sign In
+        </Link>
+        <MagneticButton
+          onClick={() => document.getElementById("waitlist")?.scrollIntoView({ behavior: "smooth" })}
+          className="magnetic-btn-primary px-4 py-2 rounded-lg bg-[#4F8EF7] text-white text-sm font-medium
+                     hover:bg-[#6ba3ff] active:scale-95 transition-colors duration-200 cursor-pointer"
+        >
+          Join Waitlist
+        </MagneticButton>
+      </div>
     </nav>
   );
 }
