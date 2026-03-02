@@ -2,6 +2,7 @@
 
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 
 interface DashboardContentProps {
   userEmail: string
@@ -61,11 +62,19 @@ export default function DashboardContent({
         <div className="font-bold text-xl tracking-tight text-white flex items-center gap-2">
           <span>ClientBrain</span>
         </div>
-        <form action={signOutAction}>
-          <button className="border border-white text-white px-5 py-2 rounded-[6px] hover:bg-white hover:text-black transition-colors text-sm font-medium">
-            Sign Out
-          </button>
-        </form>
+        <div className="flex items-center gap-4">
+          <Link
+            href="/dashboard/clients"
+            className="bg-[#4F8EF7] hover:bg-[#3b7ae0] text-white px-5 py-2 rounded-[6px] transition-colors text-sm font-medium"
+          >
+            Manage Clients
+          </Link>
+          <form action={signOutAction}>
+            <button className="border border-white text-white px-5 py-2 rounded-[6px] hover:bg-white hover:text-black transition-colors text-sm font-medium">
+              Sign Out
+            </button>
+          </form>
+        </div>
       </nav>
 
       <main className="max-w-4xl mx-auto p-6 sm:p-8 mt-4 sm:mt-10">
