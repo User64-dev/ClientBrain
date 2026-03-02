@@ -13,7 +13,7 @@ export async function storeGmailMessages(userId: string): Promise<number> {
     .eq('user_id', userId)
 
   if (clientsError) {
-    throw new Error('Failed to fetch clients')
+    throw new Error(`Failed to fetch clients: ${clientsError.message}`)
   }
 
   let count = 0

@@ -51,7 +51,8 @@ export async function fetchGmailMessages(userId: string): Promise<GmailMessage[]
   }
 
   // Get messages from the last 24 hours
-  const oneDayAgo = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000)
+  const MS_PER_DAY = 24 * 60 * 60 * 1000
+  const oneDayAgo = Math.floor((Date.now() - MS_PER_DAY) / 1000)
   const query = `after:${oneDayAgo}`
 
   const listResponse = await fetch(

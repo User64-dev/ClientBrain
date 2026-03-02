@@ -91,6 +91,6 @@ describe('storeGmailMessages', () => {
       })),
     })
 
-    await expect(storeGmailMessages('user-1')).rejects.toThrow('Failed to fetch clients')
+    await expect(storeGmailMessages('user-1')).rejects.toThrow('Failed to fetch clients: fail')
   })
 })
