@@ -13,7 +13,7 @@ jest.mock('@/utils/supabase/server', () => ({
 import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
 
-const mockRedirect = redirect as jest.Mock
+const mockRedirect = redirect as unknown as jest.Mock
 const mockCreateClient = createClient as jest.Mock
 
 function createMockSupabase({
