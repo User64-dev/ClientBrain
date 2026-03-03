@@ -11,6 +11,8 @@ interface DashboardContentProps {
   signOutAction: () => Promise<void>
 }
 
+type SyncStatus = 'idle' | 'loading' | 'success' | 'error'
+
 export default function DashboardContent({
   userEmail,
   gmailConnected,
@@ -19,6 +21,25 @@ export default function DashboardContent({
 }: DashboardContentProps) {
   const searchParams = useSearchParams()
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle')
+
+  async function handleSync() {
+    setSyncStatus('loading')
+    try {
+      const response = await fetch('/api/fetch/gmail', { method: 'POST' })
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.error || 'Sync failed')
+      }
+      setSyncStatus('success')
+      setToast({ type: 'success', message: `Synced ${data.count} messages` })
+    } catch (err) {
+      setSyncStatus('error')
+      setToast({ type: 'error', message: err instanceof Error ? err.message : 'Sync failed' })
+    } finally {
+      setTimeout(() => setSyncStatus('idle'), 3000)
+    }
+  }
 
   useEffect(() => {
     const gmailStatus = searchParams.get('gmail')
@@ -101,12 +122,21 @@ export default function DashboardContent({
               Sync your email communications with ClientBrain automatically. Keep track of every conversation without leaving the app.
             </p>
             {gmailConnected ? (
-              <button
-                disabled
-                className="mt-auto w-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-[6px] px-4 py-3 cursor-not-allowed font-medium"
-              >
-                ✓ Gmail Connected
-              </button>
+              <div className="mt-auto w-full flex flex-col gap-2">
+                <button
+                  disabled
+                  className="w-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-[6px] px-4 py-3 cursor-not-allowed font-medium"
+                >
+                  ✓ Gmail Connected
+                </button>
+                <button
+                  onClick={handleSync}
+                  disabled={syncStatus === 'loading'}
+                  className="w-full bg-[#4F8EF7] hover:bg-[#3b7ae0] text-white rounded-[6px] px-4 py-3 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {syncStatus === 'loading' ? 'Syncing...' : 'Sync Now'}
+                </button>
+              </div>
             ) : (
               <a
                 href="/api/auth/gmail"
