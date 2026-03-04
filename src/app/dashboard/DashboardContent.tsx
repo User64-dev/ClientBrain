@@ -12,6 +12,7 @@ interface DashboardContentProps {
 }
 
 type SyncStatus = 'idle' | 'loading' | 'success' | 'error'
+type BriefingStatus = 'idle' | 'loading' | 'success' | 'error'
 
 export default function DashboardContent({
   userEmail,
@@ -22,6 +23,35 @@ export default function DashboardContent({
   const searchParams = useSearchParams()
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle')
+  const [briefing, setBriefing] = useState<string | null>(null)
+  const [briefingStatus, setBriefingStatus] = useState<BriefingStatus>('idle')
+
+  async function fetchTodayBriefing() {
+    try {
+      const res = await fetch('/api/briefing/today')
+      if (res.ok) {
+        const data = await res.json()
+        if (data.briefing) {
+          setBriefing(data.briefing)
+        }
+      }
+    } catch {
+      // Silently fail — briefing will just not show
+    }
+  }
+
+  async function generateBriefing() {
+    setBriefingStatus('loading')
+    try {
+      const res = await fetch('/api/briefing/generate', { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to generate briefing')
+      setBriefing(data.briefing)
+      setBriefingStatus('success')
+    } catch {
+      setBriefingStatus('error')
+    }
+  }
 
   async function handleSync() {
     setSyncStatus('loading')
@@ -51,6 +81,8 @@ export default function DashboardContent({
 
       setSyncStatus('success')
       setToast({ type: 'success', message: `Synced ${totalCount} messages from Gmail and Slack` })
+
+      await generateBriefing()
     } catch (err) {
       setSyncStatus('error')
       setToast({ type: 'error', message: err instanceof Error ? err.message : 'Sync failed' })
@@ -58,6 +90,10 @@ export default function DashboardContent({
       setTimeout(() => setSyncStatus('idle'), 3000)
     }
   }
+
+  useEffect(() => {
+    fetchTodayBriefing()
+  }, [])
 
   useEffect(() => {
     const gmailStatus = searchParams.get('gmail')
@@ -209,6 +245,20 @@ export default function DashboardContent({
             )}
           </div>
         </div>
+
+        {/* Briefing Card */}
+        {(briefingStatus === 'loading' || briefing) && (
+          <div className="mt-8 bg-[#111111] border border-[#222222] rounded-xl p-8 shadow-xl">
+            <h2 className="text-xl font-semibold mb-4">Your Morning Briefing</h2>
+            {briefingStatus === 'loading' ? (
+              <div className="text-gray-400 animate-pulse">Generating your briefing...</div>
+            ) : (
+              <div className="text-white whitespace-pre-line leading-relaxed">
+                {briefing}
+              </div>
+            )}
+          </div>
+        )}
       </main>
     </div>
   )
