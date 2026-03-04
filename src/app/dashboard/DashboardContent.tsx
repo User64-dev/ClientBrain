@@ -26,13 +26,31 @@ export default function DashboardContent({
   async function handleSync() {
     setSyncStatus('loading')
     try {
-      const response = await fetch('/api/fetch/gmail', { method: 'POST' })
-      const data = await response.json()
-      if (!response.ok) {
-        throw new Error(data.error || 'Sync failed')
+      const results = await Promise.allSettled([
+        fetch('/api/fetch/gmail', { method: 'POST' }).then(async (res) => {
+          const data = await res.json()
+          if (!res.ok) throw new Error(data.error || 'Gmail sync failed')
+          return data.count as number
+        }),
+        fetch('/api/fetch/slack', { method: 'POST' }).then(async (res) => {
+          const data = await res.json()
+          if (!res.ok) throw new Error(data.error || 'Slack sync failed')
+          return data.count as number
+        }),
+      ])
+
+      const gmailResult = results[0]
+      const slackResult = results[1]
+      const gmailCount = gmailResult.status === 'fulfilled' ? gmailResult.value : 0
+      const slackCount = slackResult.status === 'fulfilled' ? slackResult.value : 0
+      const totalCount = gmailCount + slackCount
+
+      if (gmailResult.status === 'rejected' && slackResult.status === 'rejected') {
+        throw new Error('Sync failed')
       }
+
       setSyncStatus('success')
-      setToast({ type: 'success', message: `Synced ${data.count} messages` })
+      setToast({ type: 'success', message: `Synced ${totalCount} messages from Gmail and Slack` })
     } catch (err) {
       setSyncStatus('error')
       setToast({ type: 'error', message: err instanceof Error ? err.message : 'Sync failed' })
@@ -166,12 +184,21 @@ export default function DashboardContent({
               Sync your team messages with ClientBrain to keep track of conversations, tasks, and updates seamlessly.
             </p>
             {slackConnected ? (
-              <button
-                disabled
-                className="mt-auto w-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-[6px] px-4 py-3 cursor-not-allowed font-medium"
-              >
-                ✓ Slack Connected
-              </button>
+              <div className="mt-auto w-full flex flex-col gap-2">
+                <button
+                  disabled
+                  className="w-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-[6px] px-4 py-3 cursor-not-allowed font-medium"
+                >
+                  ✓ Slack Connected
+                </button>
+                <button
+                  onClick={handleSync}
+                  disabled={syncStatus === 'loading'}
+                  className="w-full bg-[#4F8EF7] hover:bg-[#3b7ae0] text-white rounded-[6px] px-4 py-3 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {syncStatus === 'loading' ? 'Syncing...' : 'Sync Now'}
+                </button>
+              </div>
             ) : (
               <a
                 href="/api/auth/slack"
