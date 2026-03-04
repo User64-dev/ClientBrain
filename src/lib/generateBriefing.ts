@@ -63,13 +63,20 @@ export async function generateBriefing(userId: string): Promise<string> {
     messages: [{ role: 'user', content: prompt }],
   })
 
-  const briefingContent = response.choices[0]?.message?.content || 'Unable to generate briefing.'
+  const briefingContent = response.choices[0]?.message?.content
+  if (!briefingContent) {
+    throw new Error('OpenAI returned an empty response')
+  }
 
-  await supabase.from('briefings').insert({
+  const { error: insertError } = await supabase.from('briefings').insert({
     user_id: userId,
     content: briefingContent,
     sent_at: new Date().toISOString(),
   })
+
+  if (insertError) {
+    throw new Error(`Failed to store briefing: ${insertError.message}`)
+  }
 
   return briefingContent
 }

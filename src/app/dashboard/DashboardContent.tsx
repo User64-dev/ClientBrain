@@ -35,8 +35,8 @@ export default function DashboardContent({
           setBriefing(data.briefing)
         }
       }
-    } catch {
-      // Silently fail — briefing will just not show
+    } catch (err) {
+      console.error('Failed to fetch today briefing:', err)
     }
   }
 
@@ -48,7 +48,8 @@ export default function DashboardContent({
       if (!res.ok) throw new Error(data.error || 'Failed to generate briefing')
       setBriefing(data.briefing)
       setBriefingStatus('success')
-    } catch {
+    } catch (err) {
+      console.error('Failed to generate briefing:', err)
       setBriefingStatus('error')
     }
   }
