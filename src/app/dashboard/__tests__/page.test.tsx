@@ -13,7 +13,7 @@ jest.mock('@/utils/supabase/server', () => ({
 import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
 
-const mockRedirect = redirect as jest.Mock
+const mockRedirect = redirect as unknown as jest.Mock
 const mockCreateClient = createClient as jest.Mock
 
 function createMockSupabase({
@@ -137,5 +137,20 @@ describe('Dashboard page', () => {
 
     expect(screen.getByText('✓ Gmail Connected')).toBeDisabled()
     expect(screen.getByText('✓ Slack Connected')).toBeDisabled()
+  })
+
+  it('should show Sync Now buttons when both are connected', async () => {
+    mockCreateClient.mockResolvedValue(
+      createMockSupabase({
+        gmailToken: { id: '1' },
+        slackToken: { id: '2' },
+      })
+    )
+
+    const jsx = await Dashboard()
+    render(jsx)
+
+    const syncButtons = screen.getAllByRole('button', { name: /sync now/i })
+    expect(syncButtons).toHaveLength(2)
   })
 })

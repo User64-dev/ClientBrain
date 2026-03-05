@@ -11,6 +11,9 @@ interface DashboardContentProps {
   signOutAction: () => Promise<void>
 }
 
+type SyncStatus = 'idle' | 'loading' | 'success' | 'error'
+type BriefingStatus = 'idle' | 'loading' | 'success' | 'error'
+
 export default function DashboardContent({
   userEmail,
   gmailConnected,
@@ -19,6 +22,79 @@ export default function DashboardContent({
 }: DashboardContentProps) {
   const searchParams = useSearchParams()
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle')
+  const [briefing, setBriefing] = useState<string | null>(null)
+  const [briefingStatus, setBriefingStatus] = useState<BriefingStatus>('idle')
+
+  async function fetchTodayBriefing() {
+    try {
+      const res = await fetch('/api/briefing/today')
+      if (res.ok) {
+        const data = await res.json()
+        if (data.briefing) {
+          setBriefing(data.briefing)
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch today briefing:', err)
+    }
+  }
+
+  async function generateBriefing() {
+    setBriefingStatus('loading')
+    try {
+      const res = await fetch('/api/briefing/generate', { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to generate briefing')
+      setBriefing(data.briefing)
+      setBriefingStatus('success')
+    } catch (err) {
+      console.error('Failed to generate briefing:', err)
+      setBriefingStatus('error')
+    }
+  }
+
+  async function handleSync() {
+    setSyncStatus('loading')
+    try {
+      const results = await Promise.allSettled([
+        fetch('/api/fetch/gmail', { method: 'POST' }).then(async (res) => {
+          const data = await res.json()
+          if (!res.ok) throw new Error(data.error || 'Gmail sync failed')
+          return data.count as number
+        }),
+        fetch('/api/fetch/slack', { method: 'POST' }).then(async (res) => {
+          const data = await res.json()
+          if (!res.ok) throw new Error(data.error || 'Slack sync failed')
+          return data.count as number
+        }),
+      ])
+
+      const gmailResult = results[0]
+      const slackResult = results[1]
+      const gmailCount = gmailResult.status === 'fulfilled' ? gmailResult.value : 0
+      const slackCount = slackResult.status === 'fulfilled' ? slackResult.value : 0
+      const totalCount = gmailCount + slackCount
+
+      if (gmailResult.status === 'rejected' && slackResult.status === 'rejected') {
+        throw new Error('Sync failed')
+      }
+
+      setSyncStatus('success')
+      setToast({ type: 'success', message: `Synced ${totalCount} messages from Gmail and Slack` })
+
+      await generateBriefing()
+    } catch (err) {
+      setSyncStatus('error')
+      setToast({ type: 'error', message: err instanceof Error ? err.message : 'Sync failed' })
+    } finally {
+      setTimeout(() => setSyncStatus('idle'), 3000)
+    }
+  }
+
+  useEffect(() => {
+    fetchTodayBriefing()
+  }, [])
 
   useEffect(() => {
     const gmailStatus = searchParams.get('gmail')
@@ -101,12 +177,21 @@ export default function DashboardContent({
               Sync your email communications with ClientBrain automatically. Keep track of every conversation without leaving the app.
             </p>
             {gmailConnected ? (
-              <button
-                disabled
-                className="mt-auto w-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-[6px] px-4 py-3 cursor-not-allowed font-medium"
-              >
-                ✓ Gmail Connected
-              </button>
+              <div className="mt-auto w-full flex flex-col gap-2">
+                <button
+                  disabled
+                  className="w-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-[6px] px-4 py-3 cursor-not-allowed font-medium"
+                >
+                  ✓ Gmail Connected
+                </button>
+                <button
+                  onClick={handleSync}
+                  disabled={syncStatus === 'loading'}
+                  className="w-full bg-[#4F8EF7] hover:bg-[#3b7ae0] text-white rounded-[6px] px-4 py-3 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {syncStatus === 'loading' ? 'Syncing...' : 'Sync Now'}
+                </button>
+              </div>
             ) : (
               <a
                 href="/api/auth/gmail"
@@ -136,12 +221,21 @@ export default function DashboardContent({
               Sync your team messages with ClientBrain to keep track of conversations, tasks, and updates seamlessly.
             </p>
             {slackConnected ? (
-              <button
-                disabled
-                className="mt-auto w-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-[6px] px-4 py-3 cursor-not-allowed font-medium"
-              >
-                ✓ Slack Connected
-              </button>
+              <div className="mt-auto w-full flex flex-col gap-2">
+                <button
+                  disabled
+                  className="w-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-[6px] px-4 py-3 cursor-not-allowed font-medium"
+                >
+                  ✓ Slack Connected
+                </button>
+                <button
+                  onClick={handleSync}
+                  disabled={syncStatus === 'loading'}
+                  className="w-full bg-[#4F8EF7] hover:bg-[#3b7ae0] text-white rounded-[6px] px-4 py-3 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {syncStatus === 'loading' ? 'Syncing...' : 'Sync Now'}
+                </button>
+              </div>
             ) : (
               <a
                 href="/api/auth/slack"
@@ -152,6 +246,20 @@ export default function DashboardContent({
             )}
           </div>
         </div>
+
+        {/* Briefing Card */}
+        {(briefingStatus === 'loading' || briefing) && (
+          <div className="mt-8 bg-[#111111] border border-[#222222] rounded-xl p-8 shadow-xl">
+            <h2 className="text-xl font-semibold mb-4">Your Morning Briefing</h2>
+            {briefingStatus === 'loading' ? (
+              <div className="text-gray-400 animate-pulse">Generating your briefing...</div>
+            ) : (
+              <div className="text-white whitespace-pre-line leading-relaxed">
+                {briefing}
+              </div>
+            )}
+          </div>
+        )}
       </main>
     </div>
   )
