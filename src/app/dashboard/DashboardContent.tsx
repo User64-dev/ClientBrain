@@ -19,6 +19,9 @@ export default function DashboardContent({
 }: DashboardContentProps) {
   const searchParams = useSearchParams()
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+  const [syncing, setSyncing] = useState(false)
+  const [syncResult, setSyncResult] = useState<{ gmailCount: number; slackCount: number } | null>(null)
+  const [syncError, setSyncError] = useState<string | null>(null)
 
   useEffect(() => {
     const gmailStatus = searchParams.get('gmail')
@@ -42,6 +45,28 @@ export default function DashboardContent({
       return () => clearTimeout(timer)
     }
   }, [toast])
+
+  async function handleSync() {
+    setSyncing(true)
+    setSyncResult(null)
+    setSyncError(null)
+
+    try {
+      const res = await fetch('/api/fetch/messages', { method: 'POST' })
+      const data = await res.json()
+
+      if (!res.ok) {
+        setSyncError(data.error || 'Failed to sync messages')
+        return
+      }
+
+      setSyncResult({ gmailCount: data.gmailCount, slackCount: data.slackCount })
+    } catch {
+      setSyncError('Failed to sync messages. Please try again.')
+    } finally {
+      setSyncing(false)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white font-sans sm:pb-12">
@@ -151,6 +176,27 @@ export default function DashboardContent({
               </a>
             )}
           </div>
+        </div>
+
+        {/* Sync Section */}
+        <div className="mt-8 flex flex-col items-center gap-4">
+          <button
+            onClick={handleSync}
+            disabled={syncing}
+            className="bg-[#4F8EF7] hover:bg-[#3b7ae0] disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-3 rounded-lg font-medium transition-colors text-sm"
+          >
+            {syncing ? 'Syncing...' : 'Sync Now'}
+          </button>
+
+          {syncResult && (
+            <p className="text-emerald-400 text-sm font-medium">
+              Synced {syncResult.gmailCount} emails and {syncResult.slackCount} Slack messages
+            </p>
+          )}
+
+          {syncError && (
+            <p className="text-red-400 text-sm font-medium">{syncError}</p>
+          )}
         </div>
       </main>
     </div>

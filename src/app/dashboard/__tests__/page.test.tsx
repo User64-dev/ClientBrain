@@ -138,4 +138,13 @@ describe('Dashboard page', () => {
     expect(screen.getByText('✓ Gmail Connected')).toBeDisabled()
     expect(screen.getByText('✓ Slack Connected')).toBeDisabled()
   })
+
+  it('should render Sync Now button', async () => {
+    mockCreateClient.mockResolvedValue(createMockSupabase())
+
+    const jsx = await Dashboard()
+    render(jsx)
+
+    expect(screen.getByRole('button', { name: /sync now/i })).toBeInTheDocument()
+  })
 })
