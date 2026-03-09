@@ -22,6 +22,10 @@ export default function DashboardContent({
   const [syncing, setSyncing] = useState(false)
   const [syncResult, setSyncResult] = useState<{ gmailCount: number; slackCount: number } | null>(null)
   const [syncError, setSyncError] = useState<string | null>(null)
+  const [briefing, setBriefing] = useState<string | null>(null)
+  const [briefingLoading, setBriefingLoading] = useState(false)
+  const [briefingError, setBriefingError] = useState<string | null>(null)
+  const [briefingGeneratedAt, setBriefingGeneratedAt] = useState<string | null>(null)
 
   useEffect(() => {
     const gmailStatus = searchParams.get('gmail')
@@ -46,6 +50,24 @@ export default function DashboardContent({
     }
   }, [toast])
 
+  useEffect(() => {
+    async function fetchLatestBriefing() {
+      try {
+        const res = await fetch('/api/briefing/latest')
+        if (res.ok) {
+          const data = await res.json()
+          if (data.briefing) {
+            setBriefing(data.briefing)
+            setBriefingGeneratedAt(data.generatedAt)
+          }
+        }
+      } catch {
+        // Silently fail — briefing will just not show
+      }
+    }
+    fetchLatestBriefing()
+  }, [])
+
   async function handleSync() {
     setSyncing(true)
     setSyncResult(null)
@@ -61,6 +83,24 @@ export default function DashboardContent({
       }
 
       setSyncResult({ gmailCount: data.gmailCount, slackCount: data.slackCount })
+
+      // Auto-generate briefing after successful sync
+      setBriefingLoading(true)
+      setBriefingError(null)
+      try {
+        const briefingRes = await fetch('/api/briefing/generate', { method: 'POST' })
+        const briefingData = await briefingRes.json()
+        if (briefingRes.ok) {
+          setBriefing(briefingData.briefing)
+          setBriefingGeneratedAt(new Date().toISOString())
+        } else {
+          setBriefingError(briefingData.error || 'Failed to generate briefing')
+        }
+      } catch {
+        setBriefingError('Failed to generate briefing. Please try again.')
+      } finally {
+        setBriefingLoading(false)
+      }
     } catch {
       setSyncError('Failed to sync messages. Please try again.')
     } finally {
@@ -198,6 +238,68 @@ export default function DashboardContent({
             <p className="text-red-400 text-sm font-medium">{syncError}</p>
           )}
         </div>
+
+        {/* Briefing Section */}
+        {(briefing || briefingLoading || briefingError) && (
+          <div className="mt-8 bg-[#111111] border border-[#222222] rounded-xl p-8 shadow-xl">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">Your Morning Briefing</h2>
+              <span className="text-gray-500 text-sm">
+                {new Date().toLocaleDateString('en-US', {
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })}
+              </span>
+            </div>
+
+            {briefingLoading && (
+              <div className="flex items-center gap-3 text-gray-400">
+                <svg
+                  className="animate-spin h-5 w-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                  />
+                </svg>
+                <span>Generating your briefing...</span>
+              </div>
+            )}
+
+            {briefingError && (
+              <p className="text-red-400 text-sm">{briefingError}</p>
+            )}
+
+            {briefing && !briefingLoading && (
+              <>
+                <div className="text-gray-200 text-sm leading-relaxed whitespace-pre-wrap">
+                  {briefing}
+                </div>
+                <p className="text-gray-600 text-xs mt-6">
+                  {briefingGeneratedAt &&
+                  Date.now() - new Date(briefingGeneratedAt).getTime() < 60000
+                    ? 'Generated just now'
+                    : briefingGeneratedAt
+                      ? `Generated at ${new Date(briefingGeneratedAt).toLocaleTimeString()}`
+                      : ''}
+                </p>
+              </>
+            )}
+          </div>
+        )}
       </main>
     </div>
   )
