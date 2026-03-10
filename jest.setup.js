@@ -18,7 +18,9 @@ jest.mock('next/navigation', () => ({
 // Mock environment variables
 process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co'
 process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY = 'test-anon-key'
+process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-role-key'
 process.env.RESEND_API_KEY = 'test-resend-key'
+process.env.CRON_SECRET = 'test-cron-secret'
 
 // Mock browser APIs not available in jsdom
 global.ResizeObserver = jest.fn().mockImplementation(() => ({
