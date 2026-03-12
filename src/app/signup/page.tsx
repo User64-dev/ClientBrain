@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/client'
+import { Terms } from '../terms/page'
 
 export default function Signup() {
   const [email, setEmail] = useState('')
@@ -102,6 +103,11 @@ export default function Signup() {
             {loading ? 'Creating Account...' : 'Sign Up'}
           </button>
         </form>
+
+        <p className="text-center text-gray-400 mt-4 text-sm">
+          By signing up, you agree to our <Link href="/terms" className="text-[#4F8EF7] hover:underline">Terms of Service</Link> and <Link href="/privacy" className="text-[#4F8EF7] hover:underline">Privacy Policy</Link>.
+          You should receive an email to confirm your account after signing up. Please check your inbox and spam folder.
+        </p>
 
         <div className="text-center mt-6">
           <Link href="/login" className="text-gray-400 hover:text-white transition-colors text-sm font-medium">
