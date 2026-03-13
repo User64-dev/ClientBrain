@@ -9,6 +9,7 @@ interface DashboardContentProps {
   gmailConnected: boolean
   slackConnected: boolean
   signOutAction: () => Promise<void>
+  subscription: { plan: string; status: string } | null
 }
 
 export default function DashboardContent({
@@ -16,6 +17,7 @@ export default function DashboardContent({
   gmailConnected,
   slackConnected,
   signOutAction,
+  subscription,
 }: DashboardContentProps) {
   const searchParams = useSearchParams()
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
@@ -41,7 +43,14 @@ export default function DashboardContent({
     } else if (slackStatus === 'error') {
       setToast({ type: 'error', message: 'Failed to connect Slack. Please try again.' })
     }
-  }, [searchParams])
+
+    const paymentStatus = searchParams.get('payment')
+    if (paymentStatus === 'success') {
+      setToast({ type: 'success', message: `Payment successful! Welcome to ${subscription?.plan ? subscription.plan.charAt(0).toUpperCase() + subscription.plan.slice(1) : 'your plan'}.` })
+    } else if (paymentStatus === 'cancelled') {
+      setToast({ type: 'error', message: 'Payment was cancelled.' })
+    }
+  }, [searchParams, subscription])
 
   useEffect(() => {
     if (toast) {
@@ -109,7 +118,7 @@ export default function DashboardContent({
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white font-sans sm:pb-12">
+    <div className="min-h-screen bg-[#0a0a0a] text-white font-sans flex flex-col">
       {/* Toast notification */}
       {toast && (
         <div
@@ -144,7 +153,28 @@ export default function DashboardContent({
 
       <main className="max-w-4xl mx-auto p-6 sm:p-8 mt-4 sm:mt-10">
         <h1 className="text-3xl font-bold mb-2 tracking-tight">Welcome back</h1>
-        <p className="text-gray-400 mb-10 text-lg">Logged in as {userEmail}</p>
+        <p className="text-gray-400 mb-10 text-lg flex items-center gap-2">
+          Logged in as {userEmail}
+          {subscription?.status === 'active' && (
+            <span className="bg-emerald-500/15 text-emerald-400 text-xs px-2.5 py-1 rounded-full font-semibold uppercase tracking-wider">
+              {subscription.plan}
+            </span>
+          )}
+        </p>
+
+        {(!subscription || subscription.status !== 'active') && (
+          <div className="mb-8 bg-[#111111] border border-yellow-500/30 rounded-xl p-5 flex items-center justify-between">
+            <p className="text-yellow-400 text-sm font-medium">
+              You&apos;re on the free trial. Upgrade to keep access.
+            </p>
+            <Link
+              href="/pricing"
+              className="bg-[#4F8EF7] hover:bg-[#3b7ae0] text-white px-5 py-2 rounded-[6px] transition-colors text-sm font-medium whitespace-nowrap"
+            >
+              Upgrade
+            </Link>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Gmail Card */}
@@ -301,6 +331,14 @@ export default function DashboardContent({
           </div>
         )}
       </main>
+
+      <footer className="mt-auto py-8 text-center border-t border-[#222222] bg-[#0a0a0a]">
+        <p className="text-gray-500 text-sm">
+          <Link href="/terms" className="hover:text-[#4F8EF7] transition-colors">Terms of Service</Link>
+          {' • '}
+          <Link href="/privacy" className="hover:text-[#4F8EF7] transition-colors">Privacy Policy</Link>
+        </p>
+      </footer>
     </div>
   )
 }
