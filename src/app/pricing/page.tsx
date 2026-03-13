@@ -43,6 +43,7 @@ export default function PricingPage() {
   const supabase = createClient()
   const [loading, setLoading] = useState<string | null>(null)
   const [currentPlan, setCurrentPlan] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     async function fetchSubscription() {
@@ -68,12 +69,14 @@ export default function PricingPage() {
 
   async function handleSubscribe(plan: string) {
     setLoading(plan)
+    setError(null)
 
     const {
       data: { user },
     } = await supabase.auth.getUser()
 
     if (!user) {
+      setLoading(null)
       router.push('/login')
       return
     }
@@ -87,10 +90,20 @@ export default function PricingPage() {
 
       const data = await res.json()
 
+      if (!res.ok) {
+        setError(data.error || 'Failed to create checkout session')
+        setLoading(null)
+        return
+      }
+
       if (data.url) {
         window.location.href = data.url
+      } else {
+        setError('Failed to create checkout session')
+        setLoading(null)
       }
     } catch {
+      setError('Something went wrong. Please try again.')
       setLoading(null)
     }
   }
@@ -119,6 +132,12 @@ export default function PricingPage() {
             Upgrade to unlock the full power of ClientBrain.
           </p>
         </div>
+
+        {error && (
+          <div className="mb-6 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3 text-red-400 text-sm text-center">
+            {error}
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {PLANS.map((plan) => {
