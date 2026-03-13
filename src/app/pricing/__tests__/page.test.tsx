@@ -22,7 +22,6 @@ jest.mock('@/utils/supabase/client', () => ({
 }))
 
 const originalLocationHref = window.location.href
-const mockAssign = jest.fn()
 
 beforeAll(() => {
   Object.defineProperty(window, 'location', {
