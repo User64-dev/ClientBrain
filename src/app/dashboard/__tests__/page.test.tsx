@@ -20,8 +20,20 @@ function createMockSupabase({
   user = { email: 'user@example.com', id: 'user-1' } as any,
   gmailToken = null as any,
   slackToken = null as any,
+  subscription = null as any,
 } = {}) {
   const selectMock = (table: string) => {
+    if (table === 'subscriptions') {
+      return {
+        select: jest.fn().mockReturnValue({
+          eq: jest.fn().mockReturnValue({
+            eq: jest.fn().mockReturnValue({
+              maybeSingle: jest.fn().mockResolvedValue({ data: subscription }),
+            }),
+          }),
+        }),
+      }
+    }
     const data = table === 'gmail_tokens' ? gmailToken : slackToken
     return {
       select: jest.fn().mockReturnValue({

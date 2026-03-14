@@ -731,13 +731,13 @@ function Pricing() {
   const plans = [
     {
       name: "Solo",
-      price: "$29",
+      price: "$10",
       highlight: false,
       features: ["1 user", "Gmail + Slack", "Daily briefing", "Natural language search"],
     },
     {
       name: "Team",
-      price: "$79",
+      price: "$20",
       highlight: true,
       features: ["Up to 5 users", "Everything in Solo", "Shared client workspace", "Priority support"],
     },
