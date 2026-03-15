@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ClientBrain
 
-## Getting Started
+**ClientBrain** is an AI-powered client intelligence tool. It connects your Gmail and Slack accounts, ingests messages, matches them to clients by email domain, and sends a daily AI-generated briefing organized by client.
 
-First, run the development server:
+Built on Next.js 16 (App Router) with Supabase as the backend and OpenAI for AI briefing generation.
+
+## 🚀 Tech Stack
+
+- **Framework**: Next.js 16 (App Router)
+- **Language**: TypeScript 5 (Strict Mode)
+- **UI**: React 19, Tailwind CSS v4
+- **Database & Auth**: Supabase (`@supabase/ssr`, `@supabase/supabase-js`)
+- **AI**: OpenAI API
+- **Email Delivery**: Resend
+- **Analytics**: Vercel Analytics
+- **Testing**: Jest 29, Testing Library, MSW v2, Playwright
+
+## 🛠️ Setup & Local Development
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/your-username/clientbrain.git
+   cd clientbrain
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Environment Setup**
+   Copy the example environment file and fill in your keys:
+   ```bash
+   cp .env.example .env.local
+   ```
+
+4. **Run the development server**
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000) with your browser to see the app.
+
+## 🧪 Testing
+
+The project uses Jest for unit/integration testing and Playwright for E2E testing.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Run all Jest tests
+npm test
+
+# Run Jest in watch mode
+npm run test:watch
+
+# Run Jest with coverage
+npm run test:coverage
+
+# Run Playwright E2E tests
+npm run test:e2e
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🏗️ Project Structure
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- `src/app` – Next.js App Router pages and API routes
+- `src/components` – Shared React UI components
+- `src/lib` – Core business logic (OpenAI briefing, message ingestion, domain matching)
+- `src/utils/supabase` – Client, server, and admin Supabase instances
+- `__tests__` – Unit and integration test files
+- `e2e` – Playwright end-to-end spec files
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
