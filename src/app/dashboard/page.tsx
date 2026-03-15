@@ -24,6 +24,17 @@ export default async function Dashboard() {
     .eq('user_id', user.id)
     .maybeSingle()
 
+  const { data: subscriptionData } = await supabase
+    .from('subscriptions')
+    .select('plan, status')
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  const subscription =
+    subscriptionData
+      ? { plan: subscriptionData.plan as string, status: subscriptionData.status as string }
+      : null
+
   async function signOut() {
     'use server'
     const supabase = await createClient()
@@ -37,6 +48,7 @@ export default async function Dashboard() {
       gmailConnected={!!gmailToken}
       slackConnected={!!slackToken}
       signOutAction={signOut}
+      subscription={subscription}
     />
   )
 }

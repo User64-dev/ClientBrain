@@ -4,11 +4,17 @@ import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 
+interface Subscription {
+  plan: string
+  status: string
+}
+
 interface DashboardContentProps {
   userEmail: string
   gmailConnected: boolean
   slackConnected: boolean
   signOutAction: () => Promise<void>
+  subscription?: Subscription | null
 }
 
 export default function DashboardContent({
@@ -16,6 +22,7 @@ export default function DashboardContent({
   gmailConnected,
   slackConnected,
   signOutAction,
+  subscription,
 }: DashboardContentProps) {
   const searchParams = useSearchParams()
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
@@ -40,6 +47,13 @@ export default function DashboardContent({
       setToast({ type: 'success', message: 'Slack connected successfully!' })
     } else if (slackStatus === 'error') {
       setToast({ type: 'error', message: 'Failed to connect Slack. Please try again.' })
+    }
+
+    const paymentStatus = searchParams.get('payment')
+    if (paymentStatus === 'success') {
+      setToast({ type: 'success', message: 'Subscription activated! Welcome to ClientBrain.' })
+    } else if (paymentStatus === 'cancelled') {
+      setToast({ type: 'error', message: 'Subscription cancelled. You can upgrade anytime.' })
     }
   }, [searchParams])
 
@@ -144,9 +158,29 @@ export default function DashboardContent({
 
       <main className="max-w-4xl mx-auto p-6 sm:p-8 mt-4 sm:mt-10">
         <h1 className="text-3xl font-bold mb-2 tracking-tight">Welcome back</h1>
-        <p className="text-gray-400 mb-10 text-lg">Logged in as {userEmail}</p>
+        <p className="text-gray-400 mb-4 text-lg flex items-center gap-3">
+          Logged in as {userEmail}
+          {subscription?.status === 'active' && (
+            <span className="bg-[#4F8EF7]/15 text-[#4F8EF7] text-xs px-2.5 py-1 rounded-full font-semibold uppercase tracking-wider">
+              {subscription.plan}
+            </span>
+          )}
+        </p>
+        {(!subscription || subscription.status !== 'active') && (
+          <div className="mb-8 flex items-center justify-between bg-[#111111] border border-[#333] rounded-lg px-5 py-4">
+            <p className="text-sm text-gray-300">
+              You&apos;re on the free trial. Upgrade to keep access.
+            </p>
+            <Link
+              href="/pricing"
+              className="ml-4 shrink-0 bg-[#4F8EF7] hover:bg-[#3b7ae0] text-white text-sm font-medium px-4 py-2 rounded-[6px] transition-colors"
+            >
+              Upgrade
+            </Link>
+          </div>
+        )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
           {/* Gmail Card */}
           <div className="bg-[#111111] border border-[#222222] rounded-xl p-8 relative overflow-hidden flex flex-col items-start shadow-xl">
             {gmailConnected ? (
