@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import Link from "next/link";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 /* ═══════════════════════════════════════════════════════════════
    SCROLL PROGRESS BAR
@@ -333,36 +334,6 @@ function IconSearch() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   NAVBAR
-═══════════════════════════════════════════════════════════════ */
-function Navbar() {
-  return (
-    <nav className="anim-navbar fixed top-0 left-0 right-0 z-50 flex items-center justify-between
-                    px-6 md:px-12 py-4 border-b border-white/[0.06]
-                    bg-[#0a0a0a]/75 backdrop-blur-xl">
-      <span className="text-white font-semibold text-xl tracking-tight select-none">
-        Client<span className="text-[#4F8EF7]">Brain</span>
-      </span>
-      <div className="flex items-center gap-4">
-        <Link 
-          href="/login" 
-          className="text-white/80 hover:text-white text-sm font-medium transition-colors duration-200"
-        >
-          Sign In
-        </Link>
-        <MagneticButton
-          onClick={() => document.getElementById("waitlist")?.scrollIntoView({ behavior: "smooth" })}
-          className="magnetic-btn-primary px-4 py-2 rounded-lg bg-[#4F8EF7] text-white text-sm font-medium
-                     hover:bg-[#6ba3ff] active:scale-95 transition-colors duration-200 cursor-pointer"
-        >
-          Join Waitlist
-        </MagneticButton>
-      </div>
-    </nav>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════════
    HERO
 ═══════════════════════════════════════════════════════════════ */
 function Hero() {
@@ -568,6 +539,51 @@ function Problem() {
             <p className="text-white/65 text-base leading-relaxed">{item.text}</p>
           </TiltCard>
         ))}
+      </div>
+    </section>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BACKSTORY
+═══════════════════════════════════════════════════════════════ */
+function Backstory() {
+  const titleRef = useReveal();
+  const bodyRef = useReveal("-40px");
+
+  return (
+    <section id="backstory" className="py-28 px-6 md:px-12 max-w-4xl mx-auto">
+      <div ref={titleRef} className="reveal mb-12 text-center">
+        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight">
+          Why we built this
+        </h2>
+      </div>
+
+      <div ref={bodyRef} className="reveal space-y-6">
+        <p className="text-white/55 text-base sm:text-lg leading-relaxed">
+          We were running client work across five different Slack workspaces and two Gmail accounts.
+          Every Monday we&apos;d spend an hour just reconstructing what had happened the week before —
+          what was open, what was urgent, who hadn&apos;t heard back from us yet.
+        </p>
+        <p className="text-white/55 text-base sm:text-lg leading-relaxed">
+          Things fell through the cracks. Not because we didn&apos;t care — but because no tool was
+          designed to give us a single, client-level view. Everything was organized by tool, not
+          by the people who actually matter.
+        </p>
+        <p className="text-white/55 text-base sm:text-lg leading-relaxed">
+          ClientBrain is what we built to fix that. An AI that reads everything, understands who
+          it&apos;s from, and tells you exactly what&apos;s happening across every client — before your
+          day starts.
+        </p>
+        <div className="pt-4 flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-[#4F8EF7]/20 flex items-center justify-center text-[#4F8EF7] text-xs font-bold">
+            M
+          </div>
+          <div>
+            <p className="text-white text-sm font-medium">Michele Glorioso</p>
+            <p className="text-white/35 text-xs">Founder, ClientBrain</p>
+          </div>
+        </div>
       </div>
     </section>
   );
@@ -802,25 +818,6 @@ function Pricing() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   FOOTER
-═══════════════════════════════════════════════════════════════ */
-function Footer() {
-  const ref = useReveal("-10px");
-  return (
-    <footer className="border-t border-white/[0.06] py-8 px-6 md:px-12">
-      <div ref={ref} className="reveal max-w-6xl mx-auto flex flex-col md:flex-row
-                                items-center justify-between gap-4 text-sm">
-        <span className="text-white font-medium">
-          Client<span className="text-[#4F8EF7]">Brain</span>
-        </span>
-        <span className="text-white/22 text-xs">Built by Michele Glorioso</span>
-        <span className="text-white/22 text-xs">© 2025 ClientBrain</span>
-      </div>
-    </footer>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════════
    DIVIDER
 ═══════════════════════════════════════════════════════════════ */
 function Divider() {
@@ -843,6 +840,8 @@ export default function Home() {
       <Hero />
       <Divider />
       <Problem />
+      <Divider />
+      <Backstory />
       <Divider />
       <HowItWorks />
       <Divider />
