@@ -77,7 +77,7 @@ export default function PricingContent({ currentPlan }: PricingContentProps) {
             )}
             <h2 className="text-xl font-bold mb-1">Pro</h2>
             <div className="mb-6">
-              <span className="text-4xl font-bold">€10</span>
+              <span className="text-4xl font-bold">€9.99</span>
               <span className="text-gray-400 ml-1">/month</span>
             </div>
             <ul className="space-y-3 mb-8 flex-1">
@@ -113,7 +113,7 @@ export default function PricingContent({ currentPlan }: PricingContentProps) {
             )}
             <h2 className="text-xl font-bold mb-1 mt-8">Team</h2>
             <div className="mb-6">
-              <span className="text-4xl font-bold">€20</span>
+              <span className="text-4xl font-bold">€19.99</span>
               <span className="text-gray-400 ml-1">/month</span>
             </div>
             <ul className="space-y-3 mb-8 flex-1">

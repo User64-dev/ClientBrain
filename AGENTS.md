@@ -1,4 +1,4 @@
-# GitHub Copilot Instructions — ClientBrain
+# Agents Instructions — ClientBrain
 
 ## Project Overview
 
@@ -103,15 +103,8 @@ GOOGLE_CLIENT_SECRET
 SLACK_CLIENT_ID
 SLACK_CLIENT_SECRET
 NEXT_PUBLIC_APP_URL
-OPENAI_API_KEY                  # server-side only, never exposed
+OPENAI_API_KEY
 RESEND_API_KEY
-STRIPE_PUBLISHABLE_KEY
-STRIPE_SECRET_KEY              #also used server-side only, never exposed
-STRIPE_WEBHOOK_SECRET          #also used server-side only, never exposed
-STRIPE_CLIENTBRAIN_TEAM_ID
-STRIPE_CLIENTBRAIN_PRO_ID
-STRIPE_CLIENTBRAIN_PRO_PRICE_ID
-STRIPE_CLIENTBRAIN_TEAM_PRICE_ID
 ```
 
 ---
