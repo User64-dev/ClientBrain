@@ -99,7 +99,7 @@ export async function fetchSlackMessages(
         messages.push({
           sender: email,
           content: msg.text ?? '',
-          received_at: new Date(parseFloat(msg.ts) * 1000).toISOString(),
+          received_at: new Date(parseFloat(msg.ts ?? '0') * 1000).toISOString(),
         })
       }
 
