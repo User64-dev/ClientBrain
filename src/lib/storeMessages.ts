@@ -77,7 +77,7 @@ export async function storeMessages(
   }> = []
 
   for (const msg of gmailMessages) {
-    const client = matchMessageToClient(msg.sender, clientList)
+    const client = matchMessageToClient(msg.sender, msg.content, clientList)
     if (client) {
       toInsert.push({
         user_id: userId,
@@ -91,7 +91,7 @@ export async function storeMessages(
   }
 
   for (const msg of slackMessages) {
-    const client = matchMessageToClient(msg.sender, clientList)
+    const client = matchMessageToClient(msg.sender, msg.content, clientList)
     if (client) {
       toInsert.push({
         user_id: userId,

@@ -45,8 +45,8 @@ export default async function Dashboard() {
   return (
     <DashboardContent
       userEmail={user.email || ''}
-      gmailConnected={!!gmailToken}
-      slackConnected={!!slackToken}
+      initialGmailConnected={!!gmailToken}
+      initialSlackConnected={!!slackToken}
       signOutAction={signOut}
       subscription={subscription}
     />

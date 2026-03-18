@@ -11,16 +11,16 @@ interface Subscription {
 
 interface DashboardContentProps {
   userEmail: string
-  gmailConnected: boolean
-  slackConnected: boolean
+  initialGmailConnected: boolean
+  initialSlackConnected: boolean
   signOutAction: () => Promise<void>
   subscription?: Subscription | null
 }
 
 export default function DashboardContent({
   userEmail,
-  gmailConnected,
-  slackConnected,
+  initialGmailConnected,
+  initialSlackConnected,
   signOutAction,
   subscription,
 }: DashboardContentProps) {
@@ -33,6 +33,11 @@ export default function DashboardContent({
   const [briefingLoading, setBriefingLoading] = useState(false)
   const [briefingError, setBriefingError] = useState<string | null>(null)
   const [briefingGeneratedAt, setBriefingGeneratedAt] = useState<string | null>(null)
+  const [gmailConnected, setGmailConnected] = useState(initialGmailConnected)
+  const [slackConnected, setSlackConnected] = useState(initialSlackConnected)
+  const [disconnectingGmail, setDisconnectingGmail] = useState(false)
+  const [disconnectingSlack, setDisconnectingSlack] = useState(false)
+  const [disconnectError, setDisconnectError] = useState<string | null>(null)
 
   useEffect(() => {
     const gmailStatus = searchParams.get('gmail')
@@ -81,6 +86,44 @@ export default function DashboardContent({
     }
     fetchLatestBriefing()
   }, [])
+
+  async function handleDisconnectGmail() {
+    if (!window.confirm('Are you sure you want to disconnect Gmail? Your synced messages will remain but no new messages will be fetched.')) return
+    setDisconnectingGmail(true)
+    setDisconnectError(null)
+    try {
+      const res = await fetch('/api/integrations/gmail', { method: 'DELETE' })
+      if (res.ok) {
+        setGmailConnected(false)
+      } else {
+        const data = await res.json()
+        setDisconnectError(data.error || 'Failed to disconnect Gmail')
+      }
+    } catch {
+      setDisconnectError('Failed to disconnect Gmail')
+    } finally {
+      setDisconnectingGmail(false)
+    }
+  }
+
+  async function handleDisconnectSlack() {
+    if (!window.confirm('Are you sure you want to disconnect Slack? Your synced messages will remain but no new messages will be fetched.')) return
+    setDisconnectingSlack(true)
+    setDisconnectError(null)
+    try {
+      const res = await fetch('/api/integrations/slack', { method: 'DELETE' })
+      if (res.ok) {
+        setSlackConnected(false)
+      } else {
+        const data = await res.json()
+        setDisconnectError(data.error || 'Failed to disconnect Slack')
+      }
+    } catch {
+      setDisconnectError('Failed to disconnect Slack')
+    } finally {
+      setDisconnectingSlack(false)
+    }
+  }
 
   async function handleSync() {
     setSyncing(true)
@@ -200,12 +243,24 @@ export default function DashboardContent({
               Sync your email communications with ClientBrain automatically. Keep track of every conversation without leaving the app.
             </p>
             {gmailConnected ? (
-              <button
-                disabled
-                className="mt-auto w-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-[6px] px-4 py-3 cursor-not-allowed font-medium"
-              >
-                ✓ Gmail Connected
-              </button>
+              <div className="mt-auto w-full flex items-center gap-3">
+                <span className="flex-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-[6px] px-4 py-3 font-medium text-center">
+                  ✓ Gmail Connected
+                </span>
+                <button
+                  onClick={handleDisconnectGmail}
+                  disabled={disconnectingGmail}
+                  className="bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 rounded-lg px-3 py-1 text-sm disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  {disconnectingGmail && (
+                    <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                  )}
+                  Disconnect
+                </button>
+              </div>
             ) : (
               <a
                 href="/api/auth/gmail"
@@ -235,12 +290,24 @@ export default function DashboardContent({
               Sync your team messages with ClientBrain to keep track of conversations, tasks, and updates seamlessly.
             </p>
             {slackConnected ? (
-              <button
-                disabled
-                className="mt-auto w-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-[6px] px-4 py-3 cursor-not-allowed font-medium"
-              >
-                ✓ Slack Connected
-              </button>
+              <div className="mt-auto w-full flex items-center gap-3">
+                <span className="flex-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-[6px] px-4 py-3 font-medium text-center">
+                  ✓ Slack Connected
+                </span>
+                <button
+                  onClick={handleDisconnectSlack}
+                  disabled={disconnectingSlack}
+                  className="bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 rounded-lg px-3 py-1 text-sm disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  {disconnectingSlack && (
+                    <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                  )}
+                  Disconnect
+                </button>
+              </div>
             ) : (
               <a
                 href="/api/auth/slack"
@@ -270,6 +337,10 @@ export default function DashboardContent({
 
           {syncError && (
             <p className="text-red-400 text-sm font-medium">{syncError}</p>
+          )}
+
+          {disconnectError && (
+            <p className="text-red-400 text-sm font-medium">{disconnectError}</p>
           )}
         </div>
 

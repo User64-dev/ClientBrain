@@ -52,19 +52,26 @@ export async function fetchSlackMessages(
     channelCursor = channelData.response_metadata?.next_cursor || undefined
   } while (channelCursor)
 
-  // For each channel, fetch message history
+  // For each channel, join it (if not already a member) then fetch message history
   for (const channel of channels) {
+    try {
+      await slackApi('conversations.join', accessToken, { channel: channel.id })
+    } catch {
+      // Already a member or can't join — continue anyway
+    }
+
     let historyCursor: string | undefined
 
     do {
       const historyParams: Record<string, string> = { channel: channel.id, oldest: oneDayAgo }
       if (historyCursor) historyParams.cursor = historyCursor
 
-      const historyData = await slackApi(
-        'conversations.history',
-        accessToken,
-        historyParams
-      )
+      let historyData: { messages?: { user?: string; subtype?: string; text?: string; ts?: string }[]; has_more?: boolean; response_metadata?: { next_cursor?: string } }
+      try {
+        historyData = await slackApi('conversations.history', accessToken, historyParams)
+      } catch {
+        break
+      }
 
       for (const msg of historyData.messages ?? []) {
         // Skip bot messages and messages without a user
