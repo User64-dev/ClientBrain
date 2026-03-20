@@ -23,6 +23,8 @@ import OpenAI from 'openai'
 const mockCreateAdminClient = createAdminClient as jest.Mock
 const MockOpenAI = OpenAI as jest.MockedClass<typeof OpenAI>
 
+let consoleErrorSpy: jest.SpiedFunction<typeof console.error>
+
 function createMockSupabase({
   clients = [] as Array<{ id: string; name: string }>,
   clientsError = null as unknown,
@@ -74,6 +76,11 @@ describe('updateClientMemories', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore()
   })
 
   it('calls OpenAI once per client and upserts the generated memory', async () => {
@@ -133,6 +140,10 @@ describe('updateClientMemories', () => {
     )
 
     await expect(updateClientMemories(userId)).resolves.toBeUndefined()
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      'Client memory update failed:',
+      expect.any(Error)
+    )
   })
 
   it('returns early when the user has no clients', async () => {

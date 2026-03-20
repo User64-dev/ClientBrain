@@ -9,6 +9,8 @@ import { createClient } from '@/utils/supabase/server'
 
 const mockCreateClient = createClient as jest.Mock
 
+let consoleErrorSpy: jest.SpiedFunction<typeof console.error>
+
 function createMockSupabase({
   user = null as { id: string } | null,
   deleteError = null as { message: string } | null,
@@ -28,6 +30,11 @@ function createMockSupabase({
 describe('DELETE /api/integrations/slack', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore()
   })
 
   it('returns 401 when not authenticated', async () => {
@@ -62,5 +69,6 @@ describe('DELETE /api/integrations/slack', () => {
 
     expect(res.status).toBe(500)
     expect(body).toEqual({ error: 'Failed to disconnect Slack' })
+    expect(consoleErrorSpy).toHaveBeenCalled()
   })
 })

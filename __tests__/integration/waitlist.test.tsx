@@ -17,10 +17,17 @@ import { Resend } from 'resend'
 
 const mockEmailSend = (Resend as any)._mockSend as jest.Mock
 
+let consoleErrorSpy: jest.SpiedFunction<typeof console.error>
+
 describe('Waitlist API integration', () => {
   beforeEach(() => {
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
     mockEmailSend.mockReset()
     mockEmailSend.mockResolvedValue({ data: { id: 'email-id' }, error: null })
+  })
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore()
   })
 
   it('should return success when form is submitted with valid email', async () => {
@@ -67,5 +74,6 @@ describe('Waitlist API integration', () => {
 
     expect(response.status).toBe(500)
     expect(data.error).toBeDefined()
+    expect(consoleErrorSpy).toHaveBeenCalled()
   })
 })

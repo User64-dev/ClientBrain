@@ -17,10 +17,17 @@ import { Resend } from 'resend'
 
 const mockEmailSend = (Resend as any)._mockSend as jest.Mock
 
+let consoleErrorSpy: jest.SpiedFunction<typeof console.error>
+
 describe('POST /api/waitlist', () => {
   beforeEach(() => {
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
     mockEmailSend.mockReset()
     mockEmailSend.mockResolvedValue({ data: { id: 'email-id' }, error: null })
+  })
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore()
   })
 
   it('should return 200 and success: true with valid email', async () => {
@@ -79,6 +86,7 @@ describe('POST /api/waitlist', () => {
 
     expect(response.status).toBe(500)
     expect(data).toEqual({ error: 'Failed to process signup. Please try again.' })
+    expect(consoleErrorSpy).toHaveBeenCalled()
   })
 
   it('should send email to the correct recipient', async () => {

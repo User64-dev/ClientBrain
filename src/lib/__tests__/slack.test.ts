@@ -30,6 +30,8 @@ describe('fetchSlackMessages', () => {
           response_metadata: { next_cursor: '' },
         })
       )
+      // conversations.join
+      .mockResolvedValueOnce(mockSlackResponse({}))
       // conversations.history
       .mockResolvedValueOnce(
         mockSlackResponse({
@@ -60,6 +62,8 @@ describe('fetchSlackMessages', () => {
           response_metadata: { next_cursor: '' },
         })
       )
+      // conversations.join
+      .mockResolvedValueOnce(mockSlackResponse({}))
       // conversations.history with two messages from same user
       .mockResolvedValueOnce(
         mockSlackResponse({
@@ -80,8 +84,8 @@ describe('fetchSlackMessages', () => {
     const result = await fetchSlackMessages(token)
 
     expect(result).toHaveLength(2)
-    // users.info called only once (3rd fetch call total)
-    expect(mockFetch).toHaveBeenCalledTimes(3)
+    // users.info called only once (4th fetch call total)
+    expect(mockFetch).toHaveBeenCalledTimes(4)
   })
 
   it('skips bot messages (messages with subtype)', async () => {
@@ -92,6 +96,7 @@ describe('fetchSlackMessages', () => {
           response_metadata: { next_cursor: '' },
         })
       )
+      .mockResolvedValueOnce(mockSlackResponse({}))
       .mockResolvedValueOnce(
         mockSlackResponse({
           messages: [
@@ -114,6 +119,7 @@ describe('fetchSlackMessages', () => {
           response_metadata: { next_cursor: '' },
         })
       )
+      .mockResolvedValueOnce(mockSlackResponse({}))
       .mockResolvedValueOnce(
         mockSlackResponse({
           messages: [{ text: 'No user', ts: '1709654400.000' }],
@@ -134,6 +140,7 @@ describe('fetchSlackMessages', () => {
           response_metadata: { next_cursor: '' },
         })
       )
+      .mockResolvedValueOnce(mockSlackResponse({}))
       .mockResolvedValueOnce(
         mockSlackResponse({
           messages: [{ user: 'U1', text: 'Hello', ts: '1709654400.000' }],
@@ -167,10 +174,14 @@ describe('fetchSlackMessages', () => {
           response_metadata: { next_cursor: '' },
         })
       )
+      // C1 join
+      .mockResolvedValueOnce(mockSlackResponse({}))
       // C1 history
       .mockResolvedValueOnce(
         mockSlackResponse({ messages: [], has_more: false })
       )
+      // C2 join
+      .mockResolvedValueOnce(mockSlackResponse({}))
       // C2 history
       .mockResolvedValueOnce(
         mockSlackResponse({ messages: [], has_more: false })
@@ -179,8 +190,8 @@ describe('fetchSlackMessages', () => {
     const result = await fetchSlackMessages(token)
 
     expect(result).toHaveLength(0)
-    // 2 channel pages + 2 history calls = 4
-    expect(mockFetch).toHaveBeenCalledTimes(4)
+    // 2 channel pages + 2 join calls + 2 history calls = 6
+    expect(mockFetch).toHaveBeenCalledTimes(6)
   })
 
   it('handles empty channel list', async () => {

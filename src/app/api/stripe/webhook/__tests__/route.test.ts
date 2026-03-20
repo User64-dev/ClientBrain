@@ -21,6 +21,8 @@ import { createAdminClient } from '@/lib/supabase/admin'
 const mockConstructEvent = stripe.webhooks.constructEvent as jest.Mock
 const mockCreateAdminClient = createAdminClient as jest.Mock
 
+let consoleErrorSpy: jest.SpiedFunction<typeof console.error>
+
 function makeRequest(body: string, sig: string = 'valid-sig') {
   return new Request('http://localhost/api/stripe/webhook', {
     method: 'POST',
@@ -50,7 +52,12 @@ function makeAdminMock() {
 describe('POST /api/stripe/webhook', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
     process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test'
+  })
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore()
   })
 
   it('returns 400 when stripe-signature header is missing', async () => {
@@ -77,6 +84,7 @@ describe('POST /api/stripe/webhook', () => {
 
     expect(response.status).toBe(400)
     expect(data).toEqual({ error: 'Invalid signature' })
+    expect(consoleErrorSpy).toHaveBeenCalled()
   })
 
   it('upserts subscription as active on checkout.session.completed', async () => {

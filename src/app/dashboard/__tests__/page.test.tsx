@@ -124,7 +124,7 @@ describe('Dashboard page', () => {
     expect(badges).toHaveLength(2)
   })
 
-  it('should show disabled buttons when connected', async () => {
+  it('should show connected status and disconnect buttons when connected', async () => {
     mockCreateClient.mockResolvedValue(
       createMockSupabase({
         gmailToken: { id: '1' },
@@ -135,8 +135,9 @@ describe('Dashboard page', () => {
     const jsx = await Dashboard()
     render(jsx)
 
-    expect(screen.getByText('✓ Gmail Connected')).toBeDisabled()
-    expect(screen.getByText('✓ Slack Connected')).toBeDisabled()
+    expect(screen.getByText('✓ Gmail Connected')).toBeInTheDocument()
+    expect(screen.getByText('✓ Slack Connected')).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: /disconnect/i })).toHaveLength(2)
   })
 
   it('should render Sync Now button', async () => {

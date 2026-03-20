@@ -17,9 +17,16 @@ import { storeMessages } from '@/lib/storeMessages'
 const mockCreateClient = createClient as jest.Mock
 const mockStoreMessages = storeMessages as jest.Mock
 
+let consoleErrorSpy: jest.SpiedFunction<typeof console.error>
+
 describe('POST /api/fetch/messages', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore()
   })
 
   it('returns 401 when user is not authenticated', async () => {
@@ -71,5 +78,6 @@ describe('POST /api/fetch/messages', () => {
 
     expect(response.status).toBe(500)
     expect(data).toEqual({ error: 'Database error' })
+    expect(consoleErrorSpy).toHaveBeenCalled()
   })
 })
