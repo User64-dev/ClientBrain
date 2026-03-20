@@ -1,6 +1,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { NextResponse } from 'next/server'
 import { generateBriefing } from '@/lib/generateBriefing'
+import { updateClientMemories } from '@/lib/updateClientMemories'
 
 export async function POST() {
   try {
@@ -14,6 +15,10 @@ export async function POST() {
     }
 
     const briefing = await generateBriefing(user.id)
+
+    updateClientMemories(user.id).catch((err: unknown) =>
+      console.error('Memory update failed:', err)
+    )
 
     return NextResponse.json({ success: true, briefing })
   } catch (error) {

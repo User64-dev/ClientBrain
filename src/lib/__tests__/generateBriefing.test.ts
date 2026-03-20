@@ -27,6 +27,7 @@ function createMockSupabase({
   messages = [] as any[],
   messagesError = null as any,
   insertError = null as any,
+  memories = [] as any[],
 } = {}) {
   const insertMock = jest.fn().mockResolvedValue({ error: insertError })
 
@@ -46,6 +47,13 @@ function createMockSupabase({
       if (table === 'briefings') {
         return {
           insert: insertMock,
+        }
+      }
+      if (table === 'client_memories') {
+        return {
+          select: jest.fn().mockReturnValue({
+            eq: jest.fn().mockResolvedValue({ data: memories, error: null }),
+          }),
         }
       }
       return {}

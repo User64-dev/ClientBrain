@@ -3,6 +3,7 @@
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import ClientMemory from '@/components/ClientMemory'
 
 interface Subscription {
   plan: string
@@ -405,6 +406,8 @@ export default function DashboardContent({
             )}
           </div>
         )}
+
+        <ClientMemory subscription={subscription} />
       </main>
     </div>
   )

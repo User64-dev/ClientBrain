@@ -10,7 +10,7 @@ export async function generateBriefing(userId: string): Promise<string> {
 
   const { data: messages, error } = await supabase
     .from('messages')
-    .select('source, content, sender, received_at, clients(name)')
+    .select('source, content, sender, received_at, client_id, clients(name)')
     .eq('user_id', userId)
     .gte('received_at', twentyFourHoursAgo)
 
@@ -22,19 +22,29 @@ export async function generateBriefing(userId: string): Promise<string> {
     return 'No messages found in the last 24 hours. Sync your Gmail and Slack to get started.'
   }
 
-  // Group messages by client name
+  const { data: memoriesData } = await supabase
+    .from('client_memories')
+    .select('client_id, memory')
+    .eq('user_id', userId)
+
+  const memoriesByClientId = new Map<string, string>()
+  for (const m of memoriesData ?? []) {
+    memoriesByClientId.set(m.client_id, m.memory)
+  }
+
+  // Group messages by client name, tracking client_id per name
   const grouped: Record<
     string,
-    Array<{ source: string; sender: string; content: string; received_at: string }>
+    { clientId: string | null; msgs: Array<{ source: string; sender: string; content: string; received_at: string }> }
   > = {}
 
   for (const msg of messages) {
     const client = msg.clients as unknown as { name: string } | null
     const clientName = client?.name ?? 'Unknown Client'
     if (!grouped[clientName]) {
-      grouped[clientName] = []
+      grouped[clientName] = { clientId: msg.client_id ?? null, msgs: [] }
     }
-    grouped[clientName].push({
+    grouped[clientName].msgs.push({
       source: msg.source,
       sender: msg.sender,
       content: msg.content,
@@ -44,8 +54,13 @@ export async function generateBriefing(userId: string): Promise<string> {
 
   // Build user prompt
   const lines: string[] = []
-  for (const [clientName, msgs] of Object.entries(grouped)) {
-    lines.push(`Client: ${clientName}`)
+  for (const [clientName, { clientId, msgs }] of Object.entries(grouped)) {
+    const memory = clientId ? memoriesByClientId.get(clientId) : undefined
+    if (memory) {
+      lines.push(`Long-term memory for ${clientName}:\n${memory}\n\nRecent messages:`)
+    } else {
+      lines.push(`Client: ${clientName}`)
+    }
     for (const m of msgs) {
       const sourceLabel = m.source === 'gmail' ? 'Email' : 'Slack'
       const time = new Date(m.received_at).toLocaleTimeString()
