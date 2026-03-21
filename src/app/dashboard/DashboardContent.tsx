@@ -4,6 +4,7 @@ import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import ClientMemory from '@/components/ClientMemory'
+import ClientSuggestions from '@/components/ClientSuggestions'
 
 interface Subscription {
   plan: string
@@ -201,6 +202,7 @@ export default function DashboardContent({
       </nav>
 
       <main className="max-w-4xl mx-auto p-6 sm:p-8 mt-4 sm:mt-10">
+        <ClientSuggestions />
         <h1 className="text-3xl font-bold mb-2 tracking-tight">Welcome back</h1>
         <p className="text-gray-400 mb-4 text-lg flex items-center gap-3">
           Logged in as {userEmail}
