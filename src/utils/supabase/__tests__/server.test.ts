@@ -1,74 +1,76 @@
-import { createClient } from '../server'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createClient } from "../server";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
-const mockCookiesGetAll = jest.fn()
-const mockCookiesSet = jest.fn()
+// why dont we add coments
+// This test suite verifies the behavior of the Supabase server client, ensuring that it correctly initializes with environment variables and handles cookie operations as expected. It mocks the necessary modules and functions to isolate the tests and validate the interactions with the Supabase client and cookie handlers.
+const mockCookiesGetAll = jest.fn();
+const mockCookiesSet = jest.fn();
 
-jest.mock('@supabase/ssr', () => ({
+jest.mock("@supabase/ssr", () => ({
   createServerClient: jest.fn(),
-}))
+}));
 
-jest.mock('next/headers', () => ({
+jest.mock("next/headers", () => ({
   cookies: jest.fn(),
-}))
+}));
 
-const mockCreateServerClient = createServerClient as jest.Mock
-const mockCookies = cookies as jest.Mock
+const mockCreateServerClient = createServerClient as jest.Mock;
+const mockCookies = cookies as jest.Mock;
 
-describe('Supabase server client', () => {
+describe("Supabase server client", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
-    mockCreateServerClient.mockReturnValue({ auth: {} })
-    mockCookiesGetAll.mockReturnValue([{ name: 'session', value: 'token' }])
+    jest.clearAllMocks();
+    mockCreateServerClient.mockReturnValue({ auth: {} });
+    mockCookiesGetAll.mockReturnValue([{ name: "session", value: "token" }]);
     mockCookies.mockResolvedValue({
       getAll: mockCookiesGetAll,
       set: mockCookiesSet,
-    })
-  })
+    });
+  });
 
-  it('should create server client with correct env variables', async () => {
-    await createClient()
+  it("should create server client with correct env variables", async () => {
+    await createClient();
 
     expect(mockCreateServerClient).toHaveBeenCalledWith(
-      'https://test.supabase.co',
-      'test-anon-key',
-      expect.any(Object)
-    )
-  })
+      "https://test.supabase.co",
+      "test-anon-key",
+      expect.any(Object),
+    );
+  });
 
-  it('should handle cookies getAll correctly', async () => {
-    await createClient()
+  it("should handle cookies getAll correctly", async () => {
+    await createClient();
 
-    const cookieHandlers = mockCreateServerClient.mock.calls[0][2].cookies
-    const result = cookieHandlers.getAll()
+    const cookieHandlers = mockCreateServerClient.mock.calls[0][2].cookies;
+    const result = cookieHandlers.getAll();
 
-    expect(mockCookiesGetAll).toHaveBeenCalled()
-    expect(result).toEqual([{ name: 'session', value: 'token' }])
-  })
+    expect(mockCookiesGetAll).toHaveBeenCalled();
+    expect(result).toEqual([{ name: "session", value: "token" }]);
+  });
 
-  it('should handle cookies setAll correctly', async () => {
-    await createClient()
+  it("should handle cookies setAll correctly", async () => {
+    await createClient();
 
-    const cookieHandlers = mockCreateServerClient.mock.calls[0][2].cookies
-    const cookiesToSet = [{ name: 'session', value: 'newtoken', options: {} }]
+    const cookieHandlers = mockCreateServerClient.mock.calls[0][2].cookies;
+    const cookiesToSet = [{ name: "session", value: "newtoken", options: {} }];
 
-    cookieHandlers.setAll(cookiesToSet)
+    cookieHandlers.setAll(cookiesToSet);
 
-    expect(mockCookiesSet).toHaveBeenCalledWith('session', 'newtoken', {})
-  })
+    expect(mockCookiesSet).toHaveBeenCalledWith("session", "newtoken", {});
+  });
 
-  it('should catch errors in setAll when called from Server Component', async () => {
+  it("should catch errors in setAll when called from Server Component", async () => {
     mockCookiesSet.mockImplementation(() => {
-      throw new Error('Cannot set cookie in Server Component')
-    })
+      throw new Error("Cannot set cookie in Server Component");
+    });
 
-    await createClient()
+    await createClient();
 
-    const cookieHandlers = mockCreateServerClient.mock.calls[0][2].cookies
+    const cookieHandlers = mockCreateServerClient.mock.calls[0][2].cookies;
 
     expect(() => {
-      cookieHandlers.setAll([{ name: 'session', value: 'token', options: {} }])
-    }).not.toThrow()
-  })
-})
+      cookieHandlers.setAll([{ name: "session", value: "token", options: {} }]);
+    }).not.toThrow();
+  });
+});
